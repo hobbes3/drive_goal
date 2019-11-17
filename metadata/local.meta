@@ -10,14 +10,11 @@ modtime = 1570135506.098086000
 version = 7.3.1.1
 modtime = 1570135506.098672000
 
-[inputs/http%3A%2F%2Flnd]
-access = read : [ admin ], write : [ admin ]
-export = none
-owner = skawasaki@splunk.com
-version = 8.0.0
-modtime = 1573073229.924529000
-
 [indexes/lnd]
 owner = skawasaki@splunk.com
 version = 7.3.1.1
 modtime = 1570667539.316923000
+
+[inputs/script%3A%2F%2F.%2Fbin%2Flnd_get_drive_data.sh]
+version = 8.0.0
+modtime = 1573628344.967448000
