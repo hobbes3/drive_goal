@@ -6,9 +6,20 @@ import json
 import splunk_rest.splunk_rest as sr
 from splunk_rest.splunk_rest import splunk_rest, try_response
 
-def get_drive_data(arg):
+def get_drive_data(drive_arg):
+    drive_url = drive_arg["drive_url"]
+    drive_type = drive_arg["drive_type"]
+    skip = drive_arg["skip"]
+
+    drive_params = {
+        "take": drive_take,
+        "skip": skip
+    }
+
+    r = s.get(drive_url, headers=drive_headers, params=drive_params)
+
     @try_response
-    def send_drive_data(r):
+    def send_drive_data(r, *args, **kwargs):
         meta = {
             "request_id": r.request_id,
         }
@@ -37,24 +48,12 @@ def get_drive_data(arg):
         logger.debug("Sending drive data to Splunk...", extra=meta)
         s.post(hec_url, headers=hec_headers, data=data)
 
-    # Start of get_drive_data()
-
-    drive_url = arg["drive_url"]
-    drive_type = arg["drive_type"]
-    skip = arg["skip"]
-
-    drive_params = {
-        "take": drive_take,
-        "skip": skip
-    }
-
-    r = s.get(drive_url, headers=drive_headers, params=drive_params)
     send_drive_data(r)
 
 @splunk_rest
 def drive_rest_api():
     @try_response
-    def add_to_drive_args(r, name, url):
+    def extend_drive_args(r, name, url, *args, **kwargs):
         meta = {
             "request_id": r.request_id,
         }
@@ -73,30 +72,28 @@ def drive_rest_api():
         if script_args.sample:
             new_args = new_args[:10]
 
-        args.extend(new_args)
-
-    # Start of drive_rest_api()
+        drive_args.extend(new_args)
 
     drive_params = {"take": 1}
-    args = []
+    drive_args = []
 
     logger.info("Getting total goals count...")
     drive_url = "https://api.highground.com/1.0/Goals"
     r = s.get(drive_url, params=drive_params, headers=drive_headers)
-    add_to_drive_args(r, "goal", drive_url)
+    extend_drive_args(r, "goal", drive_url)
 
     logger.info("Getting total check-ins count...")
     drive_url = "https://api.highground.com/1.0/CheckInSessions"
     r = s.get(drive_url, params=drive_params, headers=drive_headers)
-    add_to_drive_args(r, "checkin", drive_url)
+    extend_drive_args(r, "checkin", drive_url)
 
     logger.info("Getting total feedbacks count...")
     drive_url = "https://api.highground.com/1.0/FeedbackSessions"
     r = s.get(drive_url, params=drive_params, headers=drive_headers)
-    add_to_drive_args(r, "feedback", drive_url)
+    extend_drive_args(r, "feedback", drive_url)
 
     logger.info("Getting drive data...")
-    sr.multiprocess(get_drive_data, args)
+    sr.multiprocess(get_drive_data, drive_args)
 
 if __name__ == "__main__":
     script_args = sr.get_script_args()
